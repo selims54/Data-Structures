@@ -1,0 +1,380 @@
+/*******************************************************************************************************************
+Author: Selim Sarac
+Bags
+
+Linked list based house data set using bag concept
+
+**********************************************************************************************************************/
+#include <iostream>
+#include <stdio.h>
+#include <string>
+#include <stdlib.h>
+#include <time.h>
+#include <ctime>
+
+using namespace std;
+
+enum Color {red, blue, white, black, gray, green, yellow};
+
+Color RandColorGen()
+{
+	Color r;
+	r= static_cast<Color>(rand() %7);
+	return r;
+}
+
+static const char alphacap[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+static const char alphalow[] = "abcdefghijklmnopqrstuvwxyz";
+static const char num[] = "0123456789";
+
+
+short stringLength = sizeof(alphacap) - 1;
+
+string RandomNameGen()					// generates random strings that has 7 characters
+{
+	string name="       ";
+	
+	name[0]=alphacap[rand() % stringLength];   
+  	for(int i=1; i<7;i++)
+   {
+		name[i]=alphalow[rand() % stringLength];     
+   }
+	return name;
+}
+
+string IDgen()						// generates random IDs
+{
+	string ID="          ";	
+	for(int i=0; i<3;i++)
+	{
+		ID[i]=num[rand()%10];
+	}
+	for(int i=3; i<10;i++)
+	{
+		ID[i]=alphacap[rand()%stringLength];
+	}
+	return ID;
+}
+
+struct House
+{
+	float HousePrice;
+	Color HouseColor;
+	string HouseID;
+	short HouseYear;
+	string HouseOwner;
+	House *next;
+	
+	/*House(float Hp, Color Hc, string HID,short Hy, string HO, House* t)
+	{
+		HousePrice=Hp; HouseColor=Hc; HouseID=HID; HouseYear=Hy; HouseOwner=HO; next=t;
+	}
+	// House()		//second constructor	{		HousePrice=1.00; HouseColor=white; HouseID="AAAA333AAD"; HouseYear=2010; HouseOwner="Sdfpidp"; 	}
+	*/
+};
+
+typedef House* link;
+
+class HouseBag
+{
+public:
+    HouseBag();							// Construction
+    bool add (House h);			// Adds a new house to bag
+    bool search (string hID);		// search house with ID
+	bool remove (string hID);		// Delete the str from the bag
+    unsigned short getCapacity ();	// get the capacity of the Bag. Is there any capacity
+    void ListHouseBag();			// List all houses of Bag.
+	void printColor(Color c);			// List all houses of Bag.
+    void ListHouseByColor(Color Clr);		// list house id's with a given color
+    void HouseSpecs(string hID);			//list house specs with any given id
+    void ListHouseByOwner(string HO);	// list house id's with a given owner name
+    unsigned short getSize();		// How many houses  the Bag has
+    House newH();					//generate new house 
+    link getLast();
+    link gethead();
+private:
+    link head;						// A pointer to show the first house
+    link last;						// A pointer to show the last house
+    unsigned short size;			// how many houses Bag has
+};
+
+void HouseBag::printColor(Color c)			// print color as string
+{
+    switch (c)
+    {
+        case red: cout << "red "; break;
+        case blue: cout << "blue " ; break;
+        case white: cout << "white ";break;
+        case black:	cout << "black ";break;
+        case gray: cout << "gray " ;break;
+        case green: cout << "green ";break;
+        case yellow: cout << "yellow ";break;
+    }
+}
+
+HouseBag::HouseBag()
+{
+	size = 0;
+    head =last = NULL; 				// At the beginning both, head and last are null    
+    cout << "A new bag with  " <<  getCapacity()  << " was created...!" << endl ;
+    srand(time(NULL));
+}
+
+link  HouseBag::gethead()
+{
+	return head;
+}
+
+link  HouseBag::getLast()
+{
+	return last;
+}
+
+House HouseBag::newH()									//Create a new house
+{	
+	House tempH;
+	tempH.HouseID = IDgen();
+
+	while (  search(tempH.HouseID) == true )			// check if the ID is unique
+	{
+		tempH.HouseID = IDgen();
+	}
+
+	tempH.HouseColor = RandColorGen();
+	tempH.HouseOwner = RandomNameGen();
+	tempH.HousePrice = 1000.00+double((999999.99-1000.00)*rand()/(RAND_MAX + 1.0));
+	tempH.HouseYear = rand()%(2017-1910)+1910; 
+	tempH.next = NULL;
+	cout<<tempH.HouseOwner<<"   "<<tempH.HouseID<<"   ";
+	printColor( tempH.HouseColor );  cout <<"   "<<tempH.HousePrice<<"$   ";
+	cout<<tempH.HouseYear<<endl;
+	
+	return tempH;
+	
+}
+
+bool HouseBag::add( House h)
+{
+    link NewHouse = new House;			//  dynamically create a new struct/house
+    if ( NewHouse == NULL) return false; 				// not enought memory
+	
+	NewHouse->HouseColor=h.HouseColor;
+	NewHouse->HouseID=h.HouseID;
+	NewHouse->HouseOwner=h.HouseOwner;
+	NewHouse->HousePrice=h.HousePrice;
+	NewHouse->HouseYear=h.HouseYear;
+	
+    if ( last == NULL )
+    {    
+    	head=NewHouse;				// first house to be added 
+	}	    
+    else last->next=NewHouse;
+	last = NewHouse;			
+	
+	size++;
+    return true;	// Yeah, added.
+}
+
+bool HouseBag::remove(string HID)		// Delete the house from the bag
+{
+	link back;
+	link front;
+	if (head==NULL) return false;
+	back = front = head;
+	
+	if(head->HouseID == HID ) // delete this
+	{
+		if (head == last) // there is only one house, which will be deleted
+			head = last = NULL;		
+		else
+			head = head->next;	// first of many houses is being deleted		
+		delete front;
+		size--;
+		return true;		
+	}
+	
+	front = front->next;	// if reach this line, the first house in the bag is not being deleted.
+	
+	while (front != NULL)
+	{		
+		if (front->HouseID == HID) 
+		{
+			back->next = front->next;	// a mid-house is being deleted. By-pass the (front)
+			if (front == last) last = back; // the house item is being deleted
+			delete front; 
+			size--;
+			return true;			
+		}
+		back = front ;
+		front = front -> next;
+    }	
+	return	false; // if reach this line, item is not found in the list.
+}
+ void HouseBag::HouseSpecs(string hID)
+ {
+ 	link it = head;   // it means iterator, visit all items one by one.
+    while (it != NULL) {
+        if(hID==it->HouseID)
+    	{
+    		cout << it->HouseID << "   "<<it->HouseOwner<<"  ";
+        	cout << it->HouseColor<<"   "<<it->HousePrice<<"   ";
+        	cout << it->HouseYear<<endl;
+		}		
+        it=it->next;
+    }
+	cout << endl; 	
+ }
+void HouseBag::ListHouseBag()// List, print out, all houses in the arrays, // 
+{
+	cout << size << " houses found \n" ;
+    link it = head;   // it means iterator, visit all items one by one.
+	
+    while (it != NULL) {
+        cout << it->HouseOwner << "   ";
+        cout << it->HouseID << "   ";
+        printColor( it->HouseColor );
+        cout << it->HousePrice << "   ";
+        cout << it->HouseYear << endl;
+        it=it->next;	
+    }
+	cout << endl;
+}
+
+void HouseBag::ListHouseByColor(Color clr)// List, print out, all houses in the arrays, // 
+{
+    link it = head;   // it means iterator, visit all items one by one.
+	cout << clr << " in ListHouseByColor \n";
+
+    while (it != NULL) {
+
+        if(clr == it->HouseColor)
+	    {	
+			cout << it->HouseID << "   "<<endl;	        
+		}
+		it=it->next;
+    }
+	cout << endl;
+}
+
+void HouseBag::ListHouseByOwner(string ho) // List, print out, all houses in the arrays, // 
+{
+    link it = head;   // it means iterator, visit all items one by one.
+    while (it != NULL) {
+        if(it->HouseOwner==ho)
+	    {	
+			cout <<"House Id belongs to that owner is "<< it->HouseID << "   ";	        
+		}
+		it=it->next;
+    }
+	cout << endl;
+}
+
+unsigned short HouseBag::getSize()
+{
+	return size;
+}
+
+bool HouseBag::search(string HID)
+{
+	link it = head;
+	
+    for (int i=0; i < size; i++)
+    {
+        if (it->HouseID == HID )	return true;
+        it = it->next;
+    }    
+    return false;
+}
+
+unsigned short HouseBag::getCapacity()
+{
+	return 50000;	
+}
+
+int main(int argc, const char * argv[]) {
+   
+   string tempStr, tempclr;
+    HouseBag HBag;								// New bag is created.
+    House TH; 
+					
+	for(short i=0; i<120; i++)		// creation of multiple houses 
+	{ 		
+	    cout << i << ", ";
+		TH = HBag.newH();				// new house is initialized.
+  		HBag.add(TH);				
+	}
+	
+	cout<<HBag.getSize()<<"  houses are created..."<<endl;
+		char sel = ' ';
+		
+	while (sel != 'e')				//selection menu
+	{
+	//	HBag.ListHouseBag();
+		cout << "i(n)sert, (d)elete, srcby(i)d, srcby(c)olor, srcby(o)wner, removelas(t), si(z)e, remove(a)ll list(h)ouses (e)xit:   ";
+		cin >> sel;
+		switch(sel)
+		{
+			case 'n':
+					cout << "\nHouse to be inserted:";
+					TH = HBag.newH();
+  					HBag.add(TH);
+					cout<<"New House is added\n";
+					break;
+			case 'd':
+					cout << "\nEnter House ID to be deleted: ";
+				    cin >> tempStr;        
+					HBag.remove(tempStr);
+					HBag.ListHouseBag();
+					break;
+			case 'c':
+					cout << "\nEnter the house color to be searched: ";
+					Color tcolor;
+					unsigned short tmp;
+										
+					cout << " 1)red 2)blue 3)white 4)black 5)gray 6)green 7)yellow \n";				    
+					
+				    cin >> tmp ;
+					tcolor = static_cast<Color>(tmp-1);        
+					HBag.ListHouseByColor(tcolor);
+					
+					cout<< "listed same colored houses" << endl;
+					break;
+			case 'i':
+					cout << "\nEnter the house id to be searched: ";
+				    cin >> tempStr; 
+					HBag.HouseSpecs(tempStr);
+					cout<<endl;
+					break;
+			case 'o':
+					cout << "\nEnter the house owner to be searched: ";
+				    cin >> tempStr;        
+					HBag.ListHouseByOwner(tempStr);
+					cout<<endl;					
+					break;
+			case 't':
+					cout << "\nThe last house id to be removed: ";
+					cout<<HBag.getLast()->HouseID;
+					HBag.remove(HBag.getLast()->HouseID);
+					cout<<endl;				
+					break;
+			case 'z':
+					cout<<"\nThe number of the houses in the bag is:";					
+					cout << HBag.getSize() << endl;
+			case 'a':
+					cout<<"\n All the houses in the bag will be deleted.";
+					while (HBag.getLast() != NULL )
+					{
+						HBag.remove(HBag.getLast()->HouseID);
+					}
+					cout<<endl;
+					cout<<endl;
+			case 'h':
+					cout<<"\n The houses in the bag are as follows:\n";
+					HBag.ListHouseBag();
+			default:			
+					break;
+		}
+	}
+	
+}
+
